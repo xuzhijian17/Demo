@@ -1,0 +1,75 @@
+<?php
+//curl
+$url = 'http://lanhai668.com/Agentroborder/Pay_Index';
+$methond = 'POST';
+$proxy = '';	//'182.46.111.16:9999'
+$params = [
+	'pay_memberid'=>'50',
+	'class'=>'7',    //优先使用新后台 通道编码
+	'price'=>'300.00',
+	'pay_orderid'=>'3655008111541556312',
+	'pay_notifyurl'=>'http://w01.yczhifu.com/index.php/callback/Lanhai/callbackurl',
+	'pay_callbackurl'=>'http://dfpc.guocaiapi.com',
+	'addtime'=>'1597131715',
+	'md5sign'=>'B4C92FB32B5D8E1877C13CEC242C6E91'
+];
+
+$header =[
+	"Host: pay.weixin.qq.com",
+	"Content-Type: application/x-www-form-urlencoded",
+	"Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5",
+	"Accept-Encoding: gzip, deflate, br",
+	"Accept-Language: ru-ru,ru;q=0.7,en-us;q=0.5,en;q=0.3",
+	"Accept-Charset: windows-1251,utf-8;q=0.7,*;q=0.7",
+	"Keep-Alive: 300",
+	"User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36"
+];
+$params = http_build_query($params);	//application/x-www-form-urlencoded  注：如果params是一个数组，Content-Type头将会被设置成multipart/form-data。
+$ch = curl_init();
+
+$options = [
+	CURLOPT_URL => $url,
+	//CURLOPT_HTTPHEADER => $header,
+	CURLOPT_TIMEOUT => 60,	// 允许 cURL 函数执行的最长秒数
+	CURLOPT_RETURNTRANSFER => 1,	// TRUE 将curl_exec()获取的信息以字符串返回，而不是直接输出。
+	CURLOPT_FOLLOWLOCATION => 1,	// TRUE 时将会根据服务器返回 HTTP 头中的 "Location: " 重定向。
+];
+
+// 请求参数
+if($methond == 'GET'){
+	$url .= '?' . http_build_query($params);
+}elseif($methond == 'POST'){
+	$options[CURLOPT_POST] = 1;
+	$options[CURLOPT_POSTFIELDS] = $params;
+}else{
+	throw new Exception("Request Method Error!", 1);
+}
+
+// https访问
+if(strstr($url,'https://')){ 
+	// 是否使用证书
+	$options[CURLOPT_SSL_VERIFYPEER] = 0;	// FALSE 禁止 cURL 验证对等证书（peer's certificate）
+	$options[CURLOPT_SSL_VERIFYHOST] = 0;	// 设置为 1 是检查服务器SSL证书中是否存在一个公用名(common name)。译者注：公用名(Common Name)一般来讲就是填写你将要申请SSL证书的域名 (domain)或子域名(sub domain)。 设置成 2，会检查公用名是否存在，并且是否与提供的主机名匹配。 0 为不检查名称。 在生产环境中，这个值应该是 2（默认值）。
+}
+
+// 使用代理通道
+if(!empty($proxy)){
+	$options[CURLOPT_PROXY] = $proxy;
+}
+
+curl_setopt_array($ch, $options);
+$response = curl_exec($ch);
+$info = curl_getinfo($ch);
+var_dump($options,$info,$response);
+
+
+// 检查是否有错误发生
+if(curl_errno($ch)){
+	// log write
+	$error = curl_error($ch);
+	throw new Exception("Response Result Error!", 1);
+}
+curl_close($ch);
+	
+	
+
